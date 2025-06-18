@@ -1,0 +1,9 @@
+[project]
+name = "hacking-buddy-mcp"
+version = "0.1.0"
+description = "Hacking Buddy MCP is a tool for managing and automating security related tasks."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastmcp>=2.8.1",
+]
