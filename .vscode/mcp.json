@@ -1,0 +1,16 @@
+{
+    "servers": {
+        "hacking-buddy-mcp": {
+            "type": "stdio",
+            "command": "uv",
+            "args": [
+                "run",
+                "--with",
+                "fastmcp",
+                "fastmcp",
+                "run",
+                "/Users/$USER/Projects/hacking-buddy-mcp/hacking-buddy-src/hacking-buddy.py"
+            ]
+        }
+    }
+}
