@@ -6,20 +6,10 @@ I created this tool to demonstrate practical ways in which AI can assist during 
 
 > Note: This project currently includes only a few integrated tools, but I plan to add more over time as I experiment with different scenarios. My goal is to keep it fun and iterative—sharing progress as I go instead of waiting to launch a fully built-out version later.
 
+
 ## VSCode + GitHub Copilot
-This is setup including the .vscode directory which contains the mcp.json file.
-- You will need to adjust the path (the last argument) in the mcp json to match your configuration.
-
-### Running the MCP server within VSCode
-Running the MCP server is actually pretty easy:
-1. In VSCode go to the mcp.json
-2. Click Start above the JSON object, right above where it says "hacking-buddy-mcp"   
-![Starting MCP Server](MCP-Start.png)   
-3. Open GitHub Copilot and change it's mode to **Agent**   
-![Change GitHub Copilot to Agent Mode](ChangeToAgentMode.png)   
-4. Ask it to perform one of the actions available from Hacking Buddy MCP Tools, like "Do an nmap discovery scan on this ip range 192.168.1.0/24" and "Run port scans on those hosts"
-
-> ⚠ Note: If GitHub Copilot starts acting up you may need to start a new chat!
+This is setup including the .vscode directory which contains the `mcp.json` file.
+- You will need to adjust the `path` (the last argument) in the `mcp.json` to match your configuration.
 
 ---    
 # Setup
@@ -48,6 +38,17 @@ uv pip install -r pyproject.toml
 uv pip install fastmcp
 ```
 See the [FastMCP GitHub](https://github.com/jlowin/fastmcp).
+
+---   
+### Running the MCP server within VSCode
+Running the MCP server is actually pretty easy:
+1. In VSCode go to the mcp.json
+2. Click Start above the JSON object, right above where it says "hacking-buddy-mcp"   
+![Starting MCP Server](MCP-Start.png)   
+3. Open GitHub Copilot and change it's mode to **Agent**   
+![Change GitHub Copilot to Agent Mode](ChangeToAgentMode.png)   
+4. Ask it to perform one of the actions available from Hacking Buddy MCP Tools, like "Do an nmap discovery scan on this ip range 192.168.1.0/24" and "Run port scans on those hosts"
+> ⚠ Note: If GitHub Copilot starts acting up you may need to start a new chat!
 
 ---    
 
