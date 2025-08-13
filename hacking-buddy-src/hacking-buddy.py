@@ -158,5 +158,110 @@ def check_dns_info(target):
         result.append(f"Status: Host {target} is NOT publicly available (no A record found).")
     return "\n".join(result)
 
+# dns_check: Bulk DNS existence check with bounded concurrency
+@mcp.tool()
+def dns_check(hostnames, record_types=None, timeout_ms=2000, concurrency=20, dns_servers=None, fast=True, require_any=True):
+    """
+    Bulk DNS existence check with bounded concurrency.
+    Inputs:
+      - hostnames: list of hostnames to check
+      - record_types: list of DNS RR types to consider (default ["A","AAAA","CNAME"])
+      - timeout_ms: per-query timeout in milliseconds (default 2000)
+      - concurrency: max concurrent lookups (default 20)
+      - dns_servers: optional list of DNS server IPs to use
+      - fast: if True and require_any=True, stop after first hit per host
+      - require_any: if True, any matching type => exists; if False, all requested types must match
+    Returns:
+      dict with "results" and "summary"
+    """
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    import dns.resolver
+
+    # Validate inputs
+    if not isinstance(hostnames, (list, tuple)) or len(hostnames) == 0:
+        return {"results": [], "summary": {"total": 0, "exists": 0, "missing": 0}}
+
+    # Normalize options
+    record_types = record_types or ["A", "AAAA", "CNAME"]
+    try:
+        record_types = [str(rt).upper().strip() for rt in record_types if str(rt).strip()]
+    except Exception:
+        record_types = ["A", "AAAA", "CNAME"]
+
+    timeout = max(0.1, float(timeout_ms or 2000) / 1000.0)
+    max_workers = max(1, int(concurrency or 20))
+
+    def to_idna(h):
+        try:
+            return str(h).strip().encode("idna").decode("ascii")
+        except Exception:
+            return str(h).strip()
+
+    def check_one(host):
+        hostname = str(host).strip()
+        ascii_host = to_idna(hostname)
+        matched = []
+        recs = []
+        first_error = None
+        try:
+            res = dns.resolver.Resolver(configure=True)
+            if dns_servers:
+                try:
+                    res.nameservers = list(dns_servers)
+                except Exception:
+                    pass
+            for rtype in record_types:
+                try:
+                    answer = res.resolve(ascii_host, rtype, lifetime=timeout)
+                    values = [r.to_text() for r in answer]
+                    if values:
+                        matched.append(rtype)
+                        for v in values:
+                            recs.append({"type": rtype, "value": v})
+                        if fast and require_any:
+                            break
+                except Exception as e:
+                    if first_error is None:
+                        first_error = f"{type(e).__name__}: {e}"
+            if require_any:
+                exists = len(matched) > 0
+            else:
+                exists = all(rt in matched for rt in record_types)
+            return {
+                "hostname": hostname,
+                "exists": bool(exists),
+                "matchedTypes": matched,
+                "records": recs,
+                "error": None if exists or first_error is None else first_error,
+            }
+        except Exception as e:
+            return {
+                "hostname": hostname,
+                "exists": False,
+                "matchedTypes": [],
+                "records": [],
+                "error": f"{type(e).__name__}: {e}",
+            }
+
+    results = []
+    with ThreadPoolExecutor(max_workers=max_workers) as pool:
+        future_map = {pool.submit(check_one, h): h for h in hostnames}
+        for fut in as_completed(future_map):
+            try:
+                results.append(fut.result())
+            except Exception as e:
+                # Should not happen, but ensure we keep going
+                results.append({
+                    "hostname": str(future_map[fut]),
+                    "exists": False,
+                    "matchedTypes": [],
+                    "records": [],
+                    "error": f"{type(e).__name__}: {e}",
+                })
+
+    exists_count = sum(1 for r in results if r.get("exists"))
+    summary = {"total": len(results), "exists": exists_count, "missing": len(results) - exists_count}
+    return {"results": results, "summary": summary}
+
 if __name__ == "__main__":
     mcp.run()
