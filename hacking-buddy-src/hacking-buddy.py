@@ -7,7 +7,51 @@ from fastmcp import FastMCP
 
 mcp = FastMCP("hacking-buddy-mcp")
 
-# Nmap Scans
+# Port Scanning
+## Masscan Scans
+@mcp.tool()
+def run_masscan_discovery(target):
+    """Running masscan scan all port scan of ip range"""
+    try:
+        result = subprocess.run(
+            ['sudo', 'masscan', '-sS', '-Pn', '--rate', "1000", "-p0-65535", target],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        return result.stdout
+    except subprocess.CalledProcessError as e:
+        return f"Error running masscan: {e.stderr}"
+
+@mcp.tool()
+def run_masscan_defined_ports(ports, target):
+    """Running masscan defined port scan given port(s) of ip range"""
+    try:
+        result = subprocess.run(
+            ['sudo', 'masscan', '-sS', '-Pn', '--rate', "1000", "-p", ports, target],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        return result.stdout
+    except subprocess.CalledProcessError as e:
+        return f"Error running masscan: {e.stderr}"
+
+@mcp.tool()
+def run_masscan_top_ports(top_ports, target):
+    """Running masscan top-port scan given a top-ports integer of ip range"""
+    try:
+        result = subprocess.run(
+            ['sudo', 'masscan', '-sS', '-Pn', '--rate', "1000", "--top-ports", top_ports, target],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        return result.stdout
+    except subprocess.CalledProcessError as e:
+        return f"Error running masscan: {e.stderr}"
+
+## Nmap Scans
 @mcp.tool()
 def run_nmap(target):
     """Running nmap service scan on a target."""
@@ -21,7 +65,7 @@ def run_nmap(target):
         return result.stdout
     except subprocess.CalledProcessError as e:
         return f"Error running Nmap: {e.stderr}"
-    
+
 @mcp.tool()
 def run_nmap_discovery(target):
     """Running nmap discovery scan of ip range"""
